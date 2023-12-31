@@ -39,13 +39,13 @@ function parseRawRequest(request) {
     const [method, path, version] = firstLine.split(" "); // Destructure the first line
 
     const headers = {};
-    lines.forEach((line) => {
-        const [key, value] = line.split(": ");
-        if( key !== '') {
-            headers[key] = value;
+    for (const line of lines) {
+        if (line === "") {
+            break;
         }
-
-    });
+        const [key, value] = line.split(": ");
+        headers[key] = value;
+    }
 
     const body = lines[lines.length - 1];
 

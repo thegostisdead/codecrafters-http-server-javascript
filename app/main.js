@@ -1,5 +1,6 @@
 const net = require("net");
 const fs = require("fs");
+const { once } = require('events');
 const path = require("path");
 
 const {Request, parseRawRequest} = require("./request");
@@ -15,10 +16,11 @@ router.addRoute("GET", "/", "HomeController@index")
 router.addRoute("GET", "/echo/*", "EchoController@index")
 router.addRoute("GET", "/user-agent", "UserAgentController@index")
 router.addRoute("GET", "/files/*", "FileController@name")
+router.addRoute("POST", "/files/*", "FileController@aze")
 
 const server = net.createServer((socket) => {
 
-    socket.on("data", (data) => {
+    socket.on("data", async (data) => {
 
         const request = data.toString();
         const req = parseRawRequest(request);
@@ -30,6 +32,7 @@ const server = net.createServer((socket) => {
         console.log(req.path);
         console.log(req.version);
         console.log(req.headers);
+        console.log("-------------------------------")
         console.log(req.body);
         console.log("-------------------------------")
         const controller = router.handleRequest(req);
@@ -46,7 +49,6 @@ const server = net.createServer((socket) => {
                 res.setBody("Hello World");
                 socket.write(res.toString());
                 break;
-
             case "EchoController@index":
                 const stringToEcho = req.path.replace("/echo/", "");
                 res.setVersion("HTTP/1.1");
@@ -67,7 +69,6 @@ const server = net.createServer((socket) => {
                 console.log(res.toString());
                 socket.write(res.toString());
                 break;
-
             case "FileController@name":
                 const fileName = req.path.replace("/files/", "");
                 console.log(path.join(directoryPath, fileName));
@@ -77,7 +78,7 @@ const server = net.createServer((socket) => {
                 if (!fileExists) {
                     socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
                 } else {
-                    const file = fs.readFileSync(path.join(directoryPath, fileName), { encoding: 'binary' });
+                    const file = fs.readFileSync(path.join(directoryPath, fileName), {encoding: 'binary'});
                     // const res = new Response();
                     res.setVersion("HTTP/1.1");
                     res.setStatusCode(200);
@@ -89,7 +90,38 @@ const server = net.createServer((socket) => {
                     socket.write(res.toString());
                 }
                 break;
+            case "FileController@aze":
+                const toUploadFilename = req.path.replace("/files/", "");
+                const uploadPath = path.join(directoryPath, toUploadFilename);
 
+
+                // check if directory exists
+
+                const directoryExists = fs.existsSync(directoryPath);
+
+                if (!directoryExists) {
+                    socket.write(new NotFoundResponse().toString());
+                }
+
+                // const chunks = [];
+                // socket.on('data', (chunk) => {
+                //     chunks.push(chunk);
+                // });
+                //
+                // // Wait until all the data has been received
+                // await once(socket, 'end');
+                //
+                // const buff = Buffer.concat(chunks);
+
+                try {
+                    fs.writeFileSync(uploadPath, req.body);
+                } catch (e) {
+                    console.error(e);
+                }
+                res.setVersion("HTTP/1.1");
+                res.setStatusCode(201);
+                socket.write(res.toString());
+                break;
             case null:
             default:
                 console.log("No controller found")
