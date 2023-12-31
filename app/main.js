@@ -78,15 +78,20 @@ const server = net.createServer((socket) => {
                 res.setStatusCode(200);
                 res.setStatusMessage("OK");
                 res.setHeader("Content-Type", "application/octet-stream")
-
-
                 res.setContentLength(file.length);
                 res.setBody(file.toString());
                 console.log(res.toString());
                 socket.write(res.toString());
             } catch (err) {
                 console.log(err);
-                socket.write(new NotFoundResponse().toString());
+                if (err instanceof Error) {
+                    if (err.code === 'ENOENT') {
+                        console.error('File not found!');
+                        socket.write(new NotFoundResponse().toString());
+                    } else {
+                        throw err;
+                    }
+                }
             }
         }
     } else {
