@@ -99,7 +99,6 @@ const server = net.createServer((socket) => {
         }
 
         socket.end();
-        server.close();
     });
 
     socket.on("error", (err) => {
