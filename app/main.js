@@ -1,4 +1,6 @@
 const net = require("net");
+const fs = require("fs");
+const path = require("path");
 
 const { Request, parseRawRequest } = require("./request");
 const { Response, NotFoundResponse} = require("./response");
@@ -66,13 +68,14 @@ const server = net.createServer((socket) => {
             socket.write(res.toString());
         } else if (controller === "FileController@name") {
             const fileName = req.path.replace("/files/", "");
-            const fs = require("fs");
-            const path = require("path");
-            const filePath = path.join(directoryPath, fileName);
-            console.log(filePath);
+            console.log(path.join(directoryPath, fileName));
 
-            try {
-                const file = fs.readFileSync(filePath);
+            const fileExists = fs.existsSync(path.join(directoryPath, fileName));
+
+            if (!fileExists) {
+                socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+            } else {
+                const file = fs.readFileSync(path.join(directoryPath, fileName));
                 const res = new Response();
                 res.setVersion("HTTP/1.1");
                 res.setStatusCode(200);
@@ -82,24 +85,11 @@ const server = net.createServer((socket) => {
                 res.setBody(file.toString());
                 console.log(res.toString());
                 socket.write(res.toString());
-            } catch (err) {
-                if (err instanceof Error) {
-                    if (err.code === 'ENOENT') {
-                        console.error('File not found!');
-                        socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
-                    } else {
-                        throw err;
-                    }
-                }
-            } finally {
-                socket.end();
-                server.close();
             }
         }
     } else {
         socket.write(new NotFoundResponse().toString());
     }
-
     socket.end();
     server.close();
   });
