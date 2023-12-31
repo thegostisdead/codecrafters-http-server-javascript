@@ -47,6 +47,7 @@ const server = net.createServer((socket) => {
             res.setVersion("HTTP/1.1");
             res.setStatusCode(200);
             res.setStatusMessage("OK");
+            res.setHeader("Content-Type", "text/plain")
             res.setBody(stringToEcho);
             console.log(res.toString());
             socket.write(res.toString());

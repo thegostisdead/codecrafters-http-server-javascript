@@ -24,6 +24,10 @@ class Response {
         this.headers = headers;
     }
 
+    setHeader(key, value) {
+        this.headers[key] = value;
+    }
+
     setBody(body) {
         this.body = body;
     }
