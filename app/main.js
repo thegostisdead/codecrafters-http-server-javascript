@@ -9,6 +9,7 @@ const router = new Router()
 
 router.addRoute("GET", "/", "HomeController@index")
 router.addRoute("GET", "/echo/*", "EchoController@index")
+router.addRoute("GET", "/user-agent", "UserAgentController@index")
 
 const server = net.createServer((socket) => {
 
@@ -50,6 +51,16 @@ const server = net.createServer((socket) => {
             res.setHeader("Content-Type", "text/plain")
             res.setContentLength(stringToEcho.length);
             res.setBody(stringToEcho);
+            console.log(res.toString());
+            socket.write(res.toString());
+        } else if (controller === "UserAgentController@index") {
+            const res = new Response();
+            res.setVersion("HTTP/1.1");
+            res.setStatusCode(200);
+            res.setStatusMessage("OK");
+            res.setHeader("Content-Type", "text/plain")
+            res.setContentLength(req.headers["User-Agent"].length);
+            res.setBody(req.headers["User-Agent"]);
             console.log(res.toString());
             socket.write(res.toString());
         }
