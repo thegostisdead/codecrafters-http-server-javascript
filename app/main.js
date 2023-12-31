@@ -38,7 +38,6 @@ const server = net.createServer((socket) => {
             res.setStatusCode(200);
             res.setStatusMessage("OK");
             res.setBody("Hello World");
-            console.log(res.toString());
             socket.write(res.toString());
         } else if (controller === "EchoController@index") {
 
@@ -51,7 +50,6 @@ const server = net.createServer((socket) => {
             res.setHeader("Content-Type", "text/plain")
             res.setContentLength(stringToEcho.length);
             res.setBody(stringToEcho);
-            console.log(res.toString());
             socket.write(res.toString());
         } else if (controller === "UserAgentController@index") {
             const res = new Response();
@@ -64,8 +62,6 @@ const server = net.createServer((socket) => {
             console.log(res.toString());
             socket.write(res.toString());
         }
-
-
     } else {
         socket.write(new NotFoundResponse().toString());
     }
