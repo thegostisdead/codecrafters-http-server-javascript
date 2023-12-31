@@ -32,6 +32,12 @@ class Router {
         return null;
     }
 
+    showRoutes() {
+        for (const route of this.routes) {
+            console.log(`${route.method} ${route.path} -> ${route.controller}`);
+        }
+    }
+
 }
 
 module.exports = { Router };
