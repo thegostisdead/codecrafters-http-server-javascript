@@ -28,6 +28,10 @@ class Response {
         this.headers[key] = value;
     }
 
+    setContentLength(contentLength) {
+        this.headers["Content-Length"] = contentLength;
+    }
+
     setBody(body) {
         this.body = body;
     }
