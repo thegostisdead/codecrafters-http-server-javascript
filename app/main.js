@@ -83,15 +83,21 @@ const server = net.createServer((socket) => {
                 console.log(res.toString());
                 socket.write(res.toString());
             } catch (err) {
-                console.log(err);
                 if (err instanceof Error) {
                     if (err.code === 'ENOENT') {
                         console.error('File not found!');
-                        socket.write(new NotFoundResponse().toString());
+                        const notFoundResponse = new NotFoundResponse();
+                        notFoundResponse.setBody("")
+                        notFoundResponse.setStatusMessage("")
+                        console.log(notFoundResponse.toString());
+                        socket.write(notFoundResponse.toString());
                     } else {
                         throw err;
                     }
                 }
+            } finally {
+                socket.end();
+                server.close();
             }
         }
     } else {
