@@ -86,11 +86,7 @@ const server = net.createServer((socket) => {
                 if (err instanceof Error) {
                     if (err.code === 'ENOENT') {
                         console.error('File not found!');
-                        const notFoundResponse = new NotFoundResponse();
-                        notFoundResponse.setBody("")
-                        notFoundResponse.setStatusMessage("")
-                        console.log(notFoundResponse.toString());
-                        socket.write(notFoundResponse.toString());
+                        socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
                     } else {
                         throw err;
                     }
