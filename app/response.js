@@ -38,4 +38,15 @@ class Response {
     }
 }
 
-module.exports = { Response };
+class NotFoundResponse extends Response {
+
+        constructor() {
+            super();
+            this.setVersion("HTTP/1.1");
+            this.setStatusCode(404);
+            this.setStatusMessage("Not Found");
+            this.setBody("Not Found");
+        }
+}
+
+module.exports = { Response, NotFoundResponse };
