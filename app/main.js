@@ -1,6 +1,5 @@
 const net = require("net");
 const fs = require("fs");
-const { once } = require('events');
 const path = require("path");
 
 const {Request, parseRawRequest} = require("./request");
@@ -94,7 +93,6 @@ const server = net.createServer((socket) => {
                 const toUploadFilename = req.path.replace("/files/", "");
                 const uploadPath = path.join(directoryPath, toUploadFilename);
 
-
                 // check if directory exists
 
                 const directoryExists = fs.existsSync(directoryPath);
@@ -102,16 +100,6 @@ const server = net.createServer((socket) => {
                 if (!directoryExists) {
                     socket.write(new NotFoundResponse().toString());
                 }
-
-                // const chunks = [];
-                // socket.on('data', (chunk) => {
-                //     chunks.push(chunk);
-                // });
-                //
-                // // Wait until all the data has been received
-                // await once(socket, 'end');
-                //
-                // const buff = Buffer.concat(chunks);
 
                 try {
                     fs.writeFileSync(uploadPath, req.body);
