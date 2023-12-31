@@ -2,9 +2,9 @@ const net = require("net");
 const fs = require("fs");
 const path = require("path");
 
-const { Request, parseRawRequest } = require("./request");
-const { Response, NotFoundResponse} = require("./response");
-const { Router } = require("./router");
+const {Request, parseRawRequest} = require("./request");
+const {Response, NotFoundResponse} = require("./response");
+const {Router} = require("./router");
 
 const directory = process.argv[2];
 const directoryPath = process.argv[3];
@@ -18,93 +18,101 @@ router.addRoute("GET", "/files/*", "FileController@name")
 
 const server = net.createServer((socket) => {
 
-  socket.on("data", (data) => {
+    socket.on("data", (data) => {
 
-    const request = data.toString();
-    const req = parseRawRequest(request);
+        const request = data.toString();
+        const req = parseRawRequest(request);
 
-    console.log("Data received")
-    console.log(request);
-    console.log("-------------------------------")
-    console.log(req.method);
-    console.log(req.path);
-    console.log(req.version);
-    console.log(req.headers);
-    console.log(req.body);
-    console.log("-------------------------------")
-    const controller = router.handleRequest(req);
-    console.log(controller)
-    console.log("-------------------------------")
-    if (controller) {
+        console.log("Data received")
+        console.log(request);
+        console.log("-------------------------------")
+        console.log(req.method);
+        console.log(req.path);
+        console.log(req.version);
+        console.log(req.headers);
+        console.log(req.body);
+        console.log("-------------------------------")
+        const controller = router.handleRequest(req);
+        console.log(controller)
+        console.log("-------------------------------")
 
-        if (controller === "HomeController@index") {
-            const res = new Response();
-            res.setVersion("HTTP/1.1");
-            res.setStatusCode(200);
-            res.setStatusMessage("OK");
-            res.setBody("Hello World");
-            socket.write(res.toString());
-        } else if (controller === "EchoController@index") {
+        const res = new Response();
+        switch (controller) {
 
-            const stringToEcho = req.path.replace("/echo/", "");
-
-            const res = new Response();
-            res.setVersion("HTTP/1.1");
-            res.setStatusCode(200);
-            res.setStatusMessage("OK");
-            res.setHeader("Content-Type", "text/plain")
-            res.setContentLength(stringToEcho.length);
-            res.setBody(stringToEcho);
-            socket.write(res.toString());
-        } else if (controller === "UserAgentController@index") {
-            const res = new Response();
-            res.setVersion("HTTP/1.1");
-            res.setStatusCode(200);
-            res.setStatusMessage("OK");
-            res.setHeader("Content-Type", "text/plain")
-            res.setContentLength(req.headers["User-Agent"].length);
-            res.setBody(req.headers["User-Agent"]);
-            console.log(res.toString());
-            socket.write(res.toString());
-        } else if (controller === "FileController@name") {
-            const fileName = req.path.replace("/files/", "");
-            console.log(path.join(directoryPath, fileName));
-
-            const fileExists = fs.existsSync(path.join(directoryPath, fileName));
-
-            if (!fileExists) {
-                socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
-            } else {
-                const file = fs.readFileSync(path.join(directoryPath, fileName));
-                const res = new Response();
+            case "HomeController@index":
                 res.setVersion("HTTP/1.1");
                 res.setStatusCode(200);
                 res.setStatusMessage("OK");
-                res.setHeader("Content-Type", "application/octet-stream")
-                res.setContentLength(file.length);
-                res.setBody(file.toString());
+                res.setBody("Hello World");
+                socket.write(res.toString());
+                break;
+
+            case "EchoController@index":
+                const stringToEcho = req.path.replace("/echo/", "");
+                res.setVersion("HTTP/1.1");
+                res.setStatusCode(200);
+                res.setStatusMessage("OK");
+                res.setHeader("Content-Type", "text/plain")
+                res.setContentLength(stringToEcho.length);
+                res.setBody(stringToEcho);
+                socket.write(res.toString());
+                break;
+            case "UserAgentController@index":
+                res.setVersion("HTTP/1.1");
+                res.setStatusCode(200);
+                res.setStatusMessage("OK");
+                res.setHeader("Content-Type", "text/plain")
+                res.setContentLength(req.headers["User-Agent"].length);
+                res.setBody(req.headers["User-Agent"]);
                 console.log(res.toString());
                 socket.write(res.toString());
-            }
+                break;
+
+            case "FileController@name":
+                const fileName = req.path.replace("/files/", "");
+                console.log(path.join(directoryPath, fileName));
+
+                const fileExists = fs.existsSync(path.join(directoryPath, fileName));
+
+                if (!fileExists) {
+                    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+                } else {
+                    const file = fs.readFileSync(path.join(directoryPath, fileName), { encoding: 'binary' });
+                    // const res = new Response();
+                    res.setVersion("HTTP/1.1");
+                    res.setStatusCode(200);
+                    res.setStatusMessage("OK");
+                    res.setHeader("Content-Type", "application/octet-stream")
+                    res.setContentLength(file.length);
+                    res.setBody(file);
+                    console.log(res.toString());
+                    socket.write(res.toString());
+                }
+                break;
+
+            case null:
+            default:
+                console.log("No controller found")
+                const notFoundResponse = new NotFoundResponse();
+                socket.write(notFoundResponse.toString());
+                break;
         }
-    } else {
-        socket.write(new NotFoundResponse().toString());
-    }
-    socket.end();
-    server.close();
-  });
 
-  socket.on("error", (err) => {
-    console.log(err);
-    socket.end();
-  });
+        socket.end();
+        server.close();
+    });
+
+    socket.on("error", (err) => {
+        console.log(err);
+        socket.end();
+    });
 
 
-  socket.on("close", () => {
-    console.log("Connection closed");
-    socket.end();
-    server.close();
-  });
+    socket.on("close", () => {
+        console.log("Connection closed");
+        socket.end();
+        server.close();
+    });
 
 });
 
